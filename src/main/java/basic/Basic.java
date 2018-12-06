@@ -45,11 +45,15 @@ public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
 	@Override
 	public void takeLeadership(CuratorFramework client) throws Exception {
 		leadCount.incrementAndGet();
-		logger.info("master {}-{}", configuration.name(), id);
+		if (logger.isInfoEnabled()) {
+			logger.info("master {}-{}", configuration.name(), id);
+		}
 		int localCounter = 0;
 		while (!getStopped()) {
 			if (localCounter++ % 2000 == 0) {
-				logger.info("periodic print by {}-{}", configuration.name(), id);
+				if (logger.isInfoEnabled()) {
+					logger.info("periodic print by {}-{}", configuration.name(), id);
+				}
 			}
 			Thread.sleep(1);
 		}
