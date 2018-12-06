@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.curator.test.TestingServer;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
@@ -15,16 +17,24 @@ public class BasicTest {
 	@Test
 	public void testStart() throws Exception {
 		try (TestingServer server = new TestingServer();
-				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
+				Basic basic = new Basic(getConfiguration("stupid1", server.getConnectString()))) {
 			basic.start();
 			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
 		}
 	}
 
+	private Configuration getConfiguration(String name, String connectionString) {
+		Configuration config = new HierarchicalConfiguration();
+		config.setProperty("name", name);
+		config.setProperty("connectionString", connectionString);
+		config.setProperty("path", "/leader/election");
+		return config;
+	}
+
 	@Test
 	public void testStop() throws Exception {
 		try (TestingServer server = new TestingServer();
-				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
+				Basic basic = new Basic(getConfiguration("stupid1", server.getConnectString()))) {
 			basic.start();
 			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
 			Awaitility.await().until(() -> !basic.getStopped());
@@ -37,7 +47,7 @@ public class BasicTest {
 	public void testClose() throws Exception {
 		Basic sillyBasic;
 		try (TestingServer server = new TestingServer();
-				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
+				Basic basic = new Basic(getConfiguration("stupid1", server.getConnectString()))) {
 			sillyBasic = basic;
 			basic.start();
 			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
@@ -50,8 +60,8 @@ public class BasicTest {
 	@Test
 	public void testSlaveDoesntBecomeMasterWhileMasterIsAlive() throws IOException, Exception {
 		try (TestingServer server = new TestingServer();
-				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
-			try (Basic basic2 = new Basic(server.getConnectString(), "stupid2")) {
+				Basic basic = new Basic(getConfiguration("stupid1", server.getConnectString()))) {
+			try (Basic basic2 = new Basic(getConfiguration("stupid2", server.getConnectString()))) {
 				basic2.start();
 				Awaitility.await().untilAsserted(() -> assertEquals(1, basic2.getLeadCount()));
 				basic.start();

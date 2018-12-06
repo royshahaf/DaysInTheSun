@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -13,11 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
-	private static final String PATH = "/examples/leader";
 	private static final Logger logger = LoggerFactory.getLogger(Basic.class);
-	private final LeaderSelector leaderSelector;
+	private final String name;
 	private final CuratorFramework client;
-	private String name;
+	private final LeaderSelector leaderSelector;
 	private final AtomicBoolean stopped = new AtomicBoolean(false);
 	private final AtomicInteger leadCount = new AtomicInteger(0);
 
@@ -25,10 +25,10 @@ public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
 		return leadCount.get();
 	}
 
-	public Basic(String connectionString, String name) {
-		client = CuratorFrameworkFactory.newClient(connectionString, 5000, 5000, new ExponentialBackoffRetry(1000, 3));
-		this.name = name;
-		leaderSelector = new LeaderSelector(client, PATH, this);
+	public Basic(Configuration configuration) {
+		name = configuration.getString("name", "undefined");
+		client = CuratorFrameworkFactory.newClient(configuration.getString("connectionString"), 5000, 5000, new ExponentialBackoffRetry(1000, 3));
+		leaderSelector = new LeaderSelector(client, configuration.getString("path", "/examples/leader"), this);
 		leaderSelector.autoRequeue();
 	}
 
