@@ -50,10 +50,8 @@ public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
 		}
 		int localCounter = 0;
 		while (!getStopped()) {
-			if (localCounter++ % 2000 == 0) {
-				if (logger.isInfoEnabled()) {
-					logger.info("periodic print by {}-{}", configuration.name(), id);
-				}
+			if (localCounter++ % 2000 == 0 && logger.isInfoEnabled()) {
+				logger.info("periodic print by {}-{}", configuration.name(), id);
 			}
 			Thread.sleep(1);
 		}
