@@ -1,18 +1,14 @@
 package basic;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.curator.test.TestingServer;
 import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.Test;
-
-import basic.Basic;
 
 public class BasicTest {
 
@@ -31,9 +27,9 @@ public class BasicTest {
 				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
 			basic.start();
 			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
-			Awaitility.await().untilAsserted(() -> assertFalse(basic.getStopped()));
+			Awaitility.await().until(() -> !basic.getStopped());
 			basic.stop();
-			Awaitility.await().untilAsserted(() -> assertTrue(basic.getStopped()));
+			Awaitility.await().until(() -> basic.getStopped());
 		}
 	}
 
@@ -45,10 +41,24 @@ public class BasicTest {
 			sillyBasic = basic;
 			basic.start();
 			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
-			Awaitility.await().untilAsserted(() -> assertFalse(basic.getStopped()));
+			Awaitility.await().until(() -> !basic.getStopped());
 		}
 		assertNotNull(sillyBasic);
-		Awaitility.await().untilAsserted(() -> assertTrue(sillyBasic.getStopped()));
+		Awaitility.await().until(() -> sillyBasic.getStopped());
+	}
+	
+	@Test
+	public void testSlaveDoesntBecomeMasterWhileMasterIsAlive() throws IOException, Exception {
+		try (TestingServer server = new TestingServer();
+				Basic basic = new Basic(server.getConnectString(), "stupid1")) {
+			try (Basic basic2 = new Basic(server.getConnectString(), "stupid2")) {
+				basic2.start();
+				Awaitility.await().untilAsserted(() -> assertEquals(1, basic2.getLeadCount()));
+				basic.start();
+				Awaitility.await().pollDelay(Duration.ONE_SECOND).untilAsserted(() -> assertEquals(0, basic.getLeadCount()));
+			}
+			Awaitility.await().untilAsserted(() -> assertEquals(1, basic.getLeadCount()));
+		}
 	}
 
 }

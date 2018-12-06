@@ -24,7 +24,7 @@ public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
 	}
 
 	public Basic(String connectionString, String name) {
-		client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3));
+		client = CuratorFrameworkFactory.newClient(connectionString, 5000, 5000, new ExponentialBackoffRetry(1000, 3));
 		this.name = name;
 		leaderSelector = new LeaderSelector(client, PATH, this);
 		leaderSelector.autoRequeue();
