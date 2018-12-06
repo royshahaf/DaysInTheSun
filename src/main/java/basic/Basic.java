@@ -44,9 +44,9 @@ public class Basic extends LeaderSelectorListenerAdapter implements Closeable {
 	@Override
 	public void takeLeadership(CuratorFramework client) throws Exception {
 		leadCount.incrementAndGet();
+		logger.info("master {}", name);
 		while (!getStopped()) {
-			logger.info("master {}", name);
-			Thread.sleep(1000);
+			Thread.sleep(1);
 		}
 	}
 
